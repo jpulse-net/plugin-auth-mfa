@@ -1,0 +1,120 @@
+{
+    "name": "auth-mfa",
+    "npmPackage": "@jpulse-net/plugin-auth-mfa",
+    "version": "0.5.0",
+    "icon": "🔐",
+    "summary": "Multi-factor authentication using TOTP authenticator apps",
+    "description": "<p>Adds TOTP-based multi-factor authentication to jPulse Framework. Supports authenticator apps like Google Authenticator, Authy, and Microsoft Authenticator.</p><ul><li><strong>TOTP Authentication:</strong> Time-based one-time passwords</li><li><strong>Backup Codes:</strong> Recovery codes for account access</li><li><strong>Flexible Policy:</strong> Optional, required, or role-based enforcement</li></ul>",
+    "author": "jPulse Team <team@jpulse.net>",
+    "jpulseVersion": ">=1.3.8",
+    "autoEnable": false,
+    "dependencies": {
+        "npm": {},
+        "plugins": {}
+    },
+    "config": {
+        "schema": [
+            {
+                "type": "help",
+                "content": "<strong>MFA Policy:</strong> Configure how multi-factor authentication is enforced for users.",
+                "tab": "Policy"
+            },
+            {
+                "id": "mfaPolicy",
+                "label": "MFA Policy",
+                "type": "select",
+                "default": "optional",
+                "options": [
+                    { "value": "optional", "label": "Optional - Users can choose to enable MFA" },
+                    { "value": "required-for-roles", "label": "Required for specific roles" },
+                    { "value": "required", "label": "Required for all users" }
+                ],
+                "help": "Controls whether MFA is optional or mandatory",
+                "tab": "Policy"
+            },
+            {
+                "id": "requiredRoles",
+                "label": "Required Roles",
+                "type": "multiselect",
+                "default": ["root"],
+                "options": [
+                    { "value": "user", "label": "Users" },
+                    { "value": "admin", "label": "Administrators" },
+                    { "value": "root", "label": "Root Users" }
+                ],
+                "help": "Roles that must have MFA enabled (when policy is 'required-for-roles')",
+                "tab": "Policy"
+            },
+            {
+                "id": "gracePeriodDays",
+                "label": "Grace Period (days)",
+                "type": "number",
+                "default": 7,
+                "min": 0,
+                "max": 30,
+                "help": "Days to allow login without MFA when policy changes to required (0 = immediate)",
+                "tab": "Policy"
+            },
+            {
+                "type": "help",
+                "content": "<strong>Security Settings:</strong> Configure security-related MFA behavior.",
+                "tab": "Security"
+            },
+            {
+                "id": "issuerName",
+                "label": "Issuer Name",
+                "type": "text",
+                "default": "jPulse",
+                "placeholder": "Your App Name",
+                "help": "Displayed in authenticator apps (e.g., 'jPulse' shows as 'jPulse:username')",
+                "tab": "Security"
+            },
+            {
+                "id": "maxFailedAttempts",
+                "label": "Max Failed Attempts",
+                "type": "number",
+                "default": 5,
+                "min": 3,
+                "max": 10,
+                "help": "Lock account after this many failed MFA attempts",
+                "tab": "Security"
+            },
+            {
+                "id": "lockoutDuration",
+                "label": "Lockout Duration (minutes)",
+                "type": "number",
+                "default": 15,
+                "min": 5,
+                "max": 60,
+                "help": "How long to lock account after max failed attempts",
+                "tab": "Security"
+            },
+            {
+                "type": "help",
+                "content": "<strong>Advanced Settings:</strong> Fine-tune MFA behavior.",
+                "tab": "Advanced"
+            },
+            {
+                "id": "backupCodeCount",
+                "label": "Backup Codes Count",
+                "type": "number",
+                "default": 10,
+                "min": 5,
+                "max": 20,
+                "help": "Number of backup codes to generate",
+                "tab": "Advanced"
+            },
+            {
+                "id": "codeValidityWindow",
+                "label": "Code Validity Window",
+                "type": "number",
+                "default": 1,
+                "min": 1,
+                "max": 3,
+                "help": "TOTP time steps to accept (1 = ±30 seconds, 2 = ±60 seconds)",
+                "tab": "Advanced"
+            }
+        ]
+    }
+}
+
