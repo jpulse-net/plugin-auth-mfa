@@ -3,8 +3,8 @@
  * @tagline         MFA Authentication Controller
  * @description     Multi-factor authentication using TOTP
  * @file            plugins/auth-mfa/webapp/controller/mfaAuth.js
- * @version         0.9.0
- * @release         2025-12-07
+ * @version         1.0.0
+ * @release         2025-12-08
  * @repository      https://github.com/jpulse-net/plugin-auth-mfa
  * @author          Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
  * @copyright       2025 Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
@@ -24,14 +24,14 @@ import LogController from '../../../../webapp/controller/log.js';
 class MfaAuthController {
 
     // ========================================================================
-    // Hook Declarations
+    // Hook Declarations (Phase 8 simplified naming)
     // Hooks are auto-registered by PluginManager during bootstrap
     // ========================================================================
     static hooks = {
-        // W-109: Multi-step authentication hooks
-        authGetRequiredStepsHook: { priority: 100 },
-        authExecuteStepHook: { priority: 100 },
-        authGetLoginWarningsHook: { priority: 100 }
+        // Multi-step authentication hooks
+        onAuthGetSteps: { priority: 100 },
+        onAuthValidateStep: { priority: 100 },
+        onAuthGetWarnings: { priority: 100 }
     };
 
     // ========================================================================
@@ -57,15 +57,15 @@ class MfaAuthController {
     }
 
     // ========================================================================
-    // W-109: Multi-step Authentication Hook
+    // Multi-step Authentication Hooks (Phase 8 naming)
     // ========================================================================
 
     /**
-     * W-109: Check if MFA step is required for this user
+     * Check if MFA step is required for this user
      * @param {object} context - { req, user, completedSteps, requiredSteps }
      * @returns {object} Modified context with MFA step added if required
      */
-    static async authGetRequiredStepsHook(context) {
+    static async onAuthGetSteps(context) {
         const { user, requiredSteps, req } = context;
 
         try {
@@ -74,13 +74,13 @@ class MfaAuthController {
             }
 
             // Check if user has MFA enabled - only require MFA verification for users WITH MFA
-            // Users WITHOUT MFA get a nag warning via authGetLoginWarningsHook instead
+            // Users WITHOUT MFA get a nag warning via onAuthGetWarnings instead
             if (user.mfa?.enabled) {
                 // Check if locked out
                 const lockStatus = MfaAuthModel.isLocked(user);
                 if (lockStatus.locked) {
                     // Still add MFA step - will fail with lock message
-                    LogController.logInfo(req, 'mfaAuth.authGetRequiredStepsHook',
+                    LogController.logInfo(req, 'mfaAuth.onAuthGetSteps',
                         `User ${user.username} MFA locked for ${lockStatus.remainingMinutes} minutes`);
                 }
 
@@ -94,13 +94,13 @@ class MfaAuthController {
                     }
                 });
 
-                LogController.logInfo(req, 'mfaAuth.authGetRequiredStepsHook',
+                LogController.logInfo(req, 'mfaAuth.onAuthGetSteps',
                     `MFA step required for user ${user.username}`);
             }
-            // Note: Users WITHOUT MFA enabled get a nag warning via authGetLoginWarningsHook
+            // Note: Users WITHOUT MFA enabled get a nag warning via onAuthGetWarnings
             // instead of blocking login with a required step
         } catch (error) {
-            LogController.logError(req, 'mfaAuth.authGetRequiredStepsHook',
+            LogController.logError(req, 'mfaAuth.onAuthGetSteps',
                 `Error checking MFA requirement: ${error.message}`);
         }
 
@@ -108,11 +108,11 @@ class MfaAuthController {
     }
 
     /**
-     * W-109: Execute MFA verification step
-     * @param {object} context - { req, step, stepData, pending, user, valid, error }
+     * Execute MFA verification step
+     * @param {object} context - { req, user, step, stepData, pending, valid, error }
      * @returns {object} Modified context with validation result
      */
-    static async authExecuteStepHook(context) {
+    static async onAuthValidateStep(context) {
         const { step, stepData, pending, user, req } = context;
 
         // Handle 'mfa' step (TOTP code) or 'mfa-backup' step (backup code)
@@ -126,7 +126,7 @@ class MfaAuthController {
             if (!code) {
                 context.valid = false;
                 context.error = step === 'mfa' ? 'MFA code required' : 'Backup code required';
-                LogController.logError(req, 'mfaAuth.authExecuteStepHook',
+                LogController.logError(req, 'mfaAuth.onAuthValidateStep',
                     `${step} code missing for user ${pending.username}`);
                 return context;
             }
@@ -135,7 +135,7 @@ class MfaAuthController {
             if (!user) {
                 context.valid = false;
                 context.error = 'User not found';
-                LogController.logError(req, 'mfaAuth.authExecuteStepHook',
+                LogController.logError(req, 'mfaAuth.onAuthValidateStep',
                     `User not found for pending auth: ${pending.userId}`);
                 return context;
             }
@@ -145,7 +145,7 @@ class MfaAuthController {
             if (lockStatus.locked) {
                 context.valid = false;
                 context.error = `Account is temporarily locked. Try again in ${lockStatus.remainingMinutes} minute(s).`;
-                LogController.logInfo(req, 'mfaAuth.authExecuteStepHook',
+                LogController.logInfo(req, 'mfaAuth.onAuthValidateStep',
                     `User ${user.username} MFA locked for ${lockStatus.remainingMinutes} minutes`);
                 return context;
             }
@@ -160,13 +160,13 @@ class MfaAuthController {
                 if (isValid) {
                     await MfaAuthModel.recordSuccess(user._id.toString());
                     context.valid = true;
-                    LogController.logInfo(req, 'mfaAuth.authExecuteStepHook',
+                    LogController.logInfo(req, 'mfaAuth.onAuthValidateStep',
                         `Backup code verification successful for user ${user.username}`);
                 } else {
                     await MfaAuthModel.recordFailure(user._id.toString());
                     context.valid = false;
                     context.error = 'Invalid or already used backup code';
-                    LogController.logInfo(req, 'mfaAuth.authExecuteStepHook',
+                    LogController.logInfo(req, 'mfaAuth.onAuthValidateStep',
                         `Backup code verification failed for user ${user.username}`);
                 }
             } else {
@@ -175,7 +175,7 @@ class MfaAuthController {
                 if (!secret) {
                     context.valid = false;
                     context.error = 'MFA not configured';
-                    LogController.logError(req, 'mfaAuth.authExecuteStepHook',
+                    LogController.logError(req, 'mfaAuth.onAuthValidateStep',
                         `MFA not configured for user ${user.username}`);
                     return context;
                 }
@@ -189,18 +189,18 @@ class MfaAuthController {
                 if (isValid) {
                     await MfaAuthModel.recordSuccess(user._id.toString());
                     context.valid = true;
-                    LogController.logInfo(req, 'mfaAuth.authExecuteStepHook',
+                    LogController.logInfo(req, 'mfaAuth.onAuthValidateStep',
                         `MFA verification successful for user ${user.username}`);
                 } else {
                     await MfaAuthModel.recordFailure(user._id.toString());
                     context.valid = false;
                     context.error = 'Invalid MFA code';
-                    LogController.logInfo(req, 'mfaAuth.authExecuteStepHook',
+                    LogController.logInfo(req, 'mfaAuth.onAuthValidateStep',
                         `MFA verification failed for user ${user.username}`);
                 }
             }
         } catch (error) {
-            LogController.logError(req, 'mfaAuth.authExecuteStepHook',
+            LogController.logError(req, 'mfaAuth.onAuthValidateStep',
                 `Error validating MFA: ${error.message}`);
             context.valid = false;
             context.error = 'MFA verification failed';
@@ -210,39 +210,31 @@ class MfaAuthController {
     }
 
     /**
-     * W-109: Return non-blocking login warnings (nag messages)
+     * Return non-blocking login warnings (nag messages)
      * Shows warning if MFA is required by policy but not enabled
      * @param {object} context - { req, user, warnings }
      * @returns {object} Modified context with warnings array
      */
-    static async authGetLoginWarningsHook(context) {
+    static async onAuthGetWarnings(context) {
         const { user, warnings, req } = context;
-
-        LogController.logInfo(req, 'mfaAuth.authGetLoginWarningsHook',
-            `HOOK CALLED for user: ${user?.username || 'unknown'}, mfa.enabled: ${user?.mfa?.enabled}`);
 
         try {
             if (!user) {
-                LogController.logInfo(req, 'mfaAuth.authGetLoginWarningsHook', 'No user - returning early');
                 return context;
             }
 
             // Check if MFA is enabled for this user
             const mfaEnabled = user.mfa?.enabled === true;
-            LogController.logInfo(req, 'mfaAuth.authGetLoginWarningsHook',
-                `mfaEnabled: ${mfaEnabled}`);
 
             if (!mfaEnabled) {
                 // Check if MFA is required by policy
                 const mfaRequired = await MfaAuthModel.isMfaRequired(user);
-                LogController.logInfo(req, 'mfaAuth.authGetLoginWarningsHook',
-                    `isMfaRequired result: required=${mfaRequired.required}, reason=${mfaRequired.reason}`);
 
                 if (mfaRequired.required) {
-                    LogController.logInfo(req, 'mfaAuth.authGetLoginWarningsHook',
-                        'Adding MFA warning to warnings array');
+                    // MFA is required but not enabled - strong warning (red toast)
                     warnings.push({
                         type: 'mfa-not-enabled',
+                        toastType: 'error',
                         message: mfaRequired.reason === 'policy-required'
                             ? 'Two-factor authentication is required. Please set up 2FA in your profile.'
                             : 'Two-factor authentication is required for your role. Please set up 2FA in your profile.',
@@ -250,12 +242,24 @@ class MfaAuthController {
                         linkText: 'Set up 2FA'
                     });
 
-                    LogController.logInfo(req, 'mfaAuth.authGetLoginWarningsHook',
+                    LogController.logInfo(req, 'mfaAuth.onAuthGetWarnings',
                         `MFA warning added for user ${user.username}: ${mfaRequired.reason}`);
+                } else if (mfaRequired.reason === 'optional') {
+                    // MFA is optional - soft nag to encourage setup (red toast)
+                    warnings.push({
+                        type: 'mfa-recommended',
+                        toastType: 'error',
+                        message: 'Secure your account with two-factor authentication.',
+                        link: '/jpulse-plugins/auth-mfa.shtml',
+                        linkText: 'Enable 2FA'
+                    });
+
+                    LogController.logInfo(req, 'mfaAuth.onAuthGetWarnings',
+                        `MFA recommendation added for user ${user.username}`);
                 }
             }
         } catch (error) {
-            LogController.logError(req, 'mfaAuth.authGetLoginWarningsHook',
+            LogController.logError(req, 'mfaAuth.onAuthGetWarnings',
                 `Error checking MFA policy: ${error.message}`);
         }
 
