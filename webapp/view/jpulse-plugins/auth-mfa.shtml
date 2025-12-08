@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<!--
+ * @name            jPulse Framework / Plugins / Auth-MFA / WebApp / View / jPulse Plugins / Auth-MFA
+ * @tagline         MFA User Profile Component
+ * @description     MFA User Profile Component shows MFA status and management options in user profile
+ * @file            plugins/auth-mfa/webapp/view/jpulse-plugins/auth-mfa.shtml
+ * @version         0.9.0
+ * @release         2025-12-07
+ * @repository      https://github.com/jpulse-net/plugin-auth-mfa
+ * @author          Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
+ * @copyright       2025 Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
+ * @license         BSL 1.1 -- see LICENSE file; for commercial use: team@jpulse.net
+ * @genai           80%, Cursor 2.1, Claude Sonnet 4.5
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two-Factor Authentication - {{app.site.shortName}}</title>
+{{file.include "jpulse-header.tmpl"}}
+    <style>
+    /* Page-specific styles */
+    .local-status-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .local-status-icon {
+        font-size: 1.5rem;
+    }
+
+    .local-status-text {
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+
+    .local-status-enabled {
+        color: var(--jp-color-success, #28a745);
+    }
+
+    .local-status-disabled {
+        color: var(--jp-text-muted, #6c757d);
+    }
+
+    .local-status-locked {
+        color: var(--jp-color-danger, #dc3545);
+    }
+
+    .local-details-table td:first-child {
+        width: 140px;
+        color: var(--jp-text-muted, #6c757d);
+    }
+
+    .local-action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+    }
+
+    .local-policy-notice {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        background: var(--jp-bg-warning, #fff3cd);
+        border: 1px solid var(--jp-border-warning, #ffc107);
+        border-radius: 4px;
+        margin-bottom: 1rem;
+    }
+
+    .local-backup-codes {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+        margin: 1rem 0;
+    }
+
+    .local-backup-codes code {
+        display: block;
+        padding: 0.5rem;
+        background: var(--jp-bg-light, #f8f9fa);
+        border-radius: 4px;
+        text-align: center;
+        font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+    }
+
+    @media (max-width: 480px) {
+        .local-backup-codes {
+            grid-template-columns: 1fr;
+        }
+    }
+    </style>
+</head>
+<body>
+    {{#component "pluginCards.authMfa" order=1}}
+        {{!-- This card is automatically included in the dashboard at jpulse-plugins/index.shtml --}}
+        <a href="/jpulse-plugins/auth-mfa.shtml" class="jp-card-dashboard jp-icon-btn">
+            <div class="jp-icon-container">🔐</div>
+            <h3 class="jp-card-title">Two-Factor Authentication</h3>
+            <p class="jp-card-description">
+                Multi-factor authentication using TOTP authenticator apps
+            </p>
+        </a>
+    {{/component}}
+
+    <div class="jp-main">
+        <div class="jp-container-1000">
+            <div class="jp-page-header">
+                <h1>🔐 Two-Factor Authentication</h1>
+                <span class="jp-subtitle">Secure your account with an authenticator app</span>
+            </div>
+
+            <!-- MFA Status Card -->
+            <div class="jp-card">
+                <h2>MFA Status</h2>
+
+                <!-- Loading state -->
+                <div id="mfa-loading" class="jp-loading">
+                    <div class="jp-spinner"></div>
+                    <span>Loading MFA status...</span>
+                </div>
+
+                <!-- MFA Disabled -->
+                <div id="mfa-disabled" style="display: none;">
+                    <div class="local-status-row">
+                        <span class="local-status-icon">⚪</span>
+                        <span class="local-status-text local-status-disabled">Not Enabled</span>
+                    </div>
+
+                    <p class="jp-text-muted">
+                        Add an extra layer of security to your account by enabling two-factor authentication.
+                    </p>
+
+                    <div id="mfa-policy-notice" class="local-policy-notice" style="display: none;">
+                        <span>⚠️</span>
+                        <span id="policy-message"></span>
+                    </div>
+
+                    <a href="/auth/mfa-setup.shtml" class="jp-btn jp-btn-primary">
+                        Enable 2FA
+                    </a>
+                </div>
+
+                <!-- MFA Enabled -->
+                <div id="mfa-enabled" style="display: none;">
+                    <div class="local-status-row">
+                        <span class="local-status-icon">✅</span>
+                        <span class="local-status-text local-status-enabled">Enabled</span>
+                    </div>
+
+                    <table class="jp-table local-details-table">
+                        <tbody>
+                            <tr>
+                                <td>Method</td>
+                                <td id="mfa-method">Authenticator App (TOTP)</td>
+                            </tr>
+                            <tr>
+                                <td>Enabled</td>
+                                <td id="mfa-enrolled-at">-</td>
+                            </tr>
+                            <tr>
+                                <td>Last used</td>
+                                <td id="mfa-last-used">-</td>
+                            </tr>
+                            <tr>
+                                <td>Backup codes</td>
+                                <td id="mfa-backup-count">-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="local-action-buttons">
+                        <button class="jp-btn jp-btn-secondary" id="btn-regenerate-codes">
+                            🔄 New Backup Codes
+                        </button>
+                        <button class="jp-btn jp-btn-danger" id="btn-disable-mfa">
+                            Disable 2FA
+                        </button>
+                    </div>
+                </div>
+
+                <!-- MFA Locked -->
+                <div id="mfa-locked" style="display: none;">
+                    <div class="local-status-row">
+                        <span class="local-status-icon">🔒</span>
+                        <span class="local-status-text local-status-locked">Temporarily Locked</span>
+                    </div>
+                    <p id="mfa-lock-message" class="jp-text-muted">Too many failed attempts.</p>
+                </div>
+            </div>
+
+            <!-- How It Works -->
+            <div class="jp-card">
+                <h2>How It Works</h2>
+                <ol>
+                    <li><strong>Enable 2FA:</strong> Scan a QR code with your authenticator app</li>
+                    <li><strong>Login:</strong> After entering your password, you'll be asked for a 6-digit code</li>
+                    <li><strong>Verify:</strong> Enter the code from your authenticator app</li>
+                    <li><strong>Backup:</strong> Save backup codes for emergency access</li>
+                </ol>
+                <p class="jp-text-muted">
+                    Compatible with Google Authenticator, Authy, Microsoft Authenticator, 1Password, and other TOTP apps.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    jPulse.dom.ready(() => {
+
+        // Load MFA status on page load
+        loadMfaStatus();
+
+        // Event listeners
+        document.getElementById('btn-regenerate-codes')?.addEventListener('click', regenerateBackupCodes);
+        document.getElementById('btn-disable-mfa')?.addEventListener('click', showDisableDialog);
+
+        async function loadMfaStatus() {
+            try {
+                const data = await jPulse.api.get('/api/1/auth-mfa/status');
+
+                document.getElementById('mfa-loading').style.display = 'none';
+
+                if (!data.success) {
+                    console.error('Failed to load MFA status');
+                    return;
+                }
+
+                const status = data.data;
+
+                if (status.isLocked) {
+                    document.getElementById('mfa-locked').style.display = 'block';
+                    return;
+                }
+
+                if (status.enabled) {
+                    document.getElementById('mfa-enabled').style.display = 'block';
+                    document.getElementById('mfa-enrolled-at').textContent =
+                        status.enrolledAt ? new Date(status.enrolledAt).toLocaleDateString() : '-';
+                    document.getElementById('mfa-last-used').textContent =
+                        status.lastUsedAt ? new Date(status.lastUsedAt).toLocaleDateString() : 'Never';
+                    document.getElementById('mfa-backup-count').textContent =
+                        `${status.backupCodesCount} remaining`;
+
+                    // Disable the disable button if policy requires MFA
+                    const disableBtn = document.getElementById('btn-disable-mfa');
+                    if (status.policyRequired && status.policyReason !== 'enabled') {
+                        disableBtn.disabled = true;
+                        disableBtn.title = 'MFA is required by policy';
+                    }
+                } else {
+                    document.getElementById('mfa-disabled').style.display = 'block';
+
+                    // Show policy notice if MFA is required
+                    if (status.policyRequired) {
+                        document.getElementById('mfa-policy-notice').style.display = 'flex';
+                        document.getElementById('policy-message').textContent =
+                            status.policyReason === 'policy-required'
+                                ? 'MFA is required for all users'
+                                : 'MFA is required for your role';
+                    }
+                }
+
+            } catch (error) {
+                console.error('Error loading MFA status:', error);
+                document.getElementById('mfa-loading').innerHTML = 'Failed to load MFA status';
+            }
+        }
+
+        async function showDisableDialog() {
+            const formHtml = `
+                <p style="color: var(--jp-color-warning, #856404); margin-bottom: 1rem;">
+                    ⚠️ This will make your account less secure.
+                </p>
+                <p>Enter your password to confirm:</p>
+                <input type="password" id="disable-password" class="jp-input"
+                    placeholder="Your password" style="width: 100%; margin-top: 0.5rem;" />
+            `;
+
+            const result = await jPulse.UI.confirmDialog({
+                title: 'Disable Two-Factor Authentication',
+                message: formHtml,
+                buttons: {
+                    'Cancel': () => false,
+                    'Disable 2FA': async (dialog) => {
+                        const password = dialog.querySelector('#disable-password').value;
+                        if (!password) {
+                            jPulse.UI.toast.error('Please enter your password.');
+                            return true; // Keep dialog open
+                        }
+
+                        try {
+                            const data = await jPulse.api.post('/api/1/auth-mfa/disable', { password });
+
+                            if (!data.success) {
+                                jPulse.UI.toast.error(data.error || 'Failed to disable MFA');
+                                return true; // Keep dialog open
+                            }
+
+                            jPulse.UI.toast.success('Two-factor authentication disabled');
+                            loadMfaStatus();
+                            return false; // Close dialog
+
+                        } catch (error) {
+                            console.error('Disable MFA error:', error);
+                            jPulse.UI.toast.error('An error occurred. Please try again.');
+                            return true; // Keep dialog open
+                        }
+                    }
+                }
+            });
+        }
+
+        async function regenerateBackupCodes() {
+            const confirmResult = await jPulse.UI.confirmDialog({
+                title: 'Regenerate Backup Codes',
+                message: 'This will invalidate your current backup codes. Continue?',
+                buttons: ['Cancel', 'Continue']
+            });
+
+            if (confirmResult.button !== 'Continue') {
+                return;
+            }
+
+            try {
+                const data = await jPulse.api.post('/api/1/auth-mfa/backup-codes');
+
+                if (!data.success) {
+                    jPulse.UI.toast.error(data.error || 'Failed to generate backup codes');
+                    return;
+                }
+
+                const backupCodes = data.data.backupCodes;
+
+                // Update count in status
+                document.getElementById('mfa-backup-count').textContent =
+                    `${backupCodes.length} remaining`;
+
+                // Build backup codes display
+                const codesHtml = `
+                    <p style="color: var(--jp-color-warning, #856404); margin-bottom: 1rem;">
+                        ⚠️ Your old backup codes are now invalid.
+                    </p>
+                    <p>Save these new codes in a secure location:</p>
+                    <div class="local-backup-codes" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin: 1rem 0;">
+                        ${backupCodes.map(code => `<code style="display: block; padding: 0.5rem; background: var(--jp-bg-light, #f8f9fa); border-radius: 4px; text-align: center; font-family: 'SF Mono', Monaco, 'Courier New', monospace;">${code}</code>`).join('')}
+                    </div>
+                `;
+
+                await jPulse.UI.confirmDialog({
+                    title: 'New Backup Codes',
+                    message: codesHtml,
+                    minWidth: 400,
+                    buttons: {
+                        'Download': () => {
+                            downloadBackupCodes(backupCodes);
+                            return true; // Keep dialog open after download
+                        },
+                        'Done': () => false
+                    }
+                });
+
+            } catch (error) {
+                console.error('Regenerate backup codes error:', error);
+                jPulse.UI.toast.error('Failed to generate backup codes. Please try again.');
+            }
+        }
+
+        function downloadBackupCodes(codes) {
+            // Use centralized function with user email for account identification
+            jPulse.plugins.authMfa.utils.downloadBackupCodes(codes, '{{user.email}}');
+        }
+    });
+    </script>
+
+{{file.include "jpulse-footer.tmpl"}}
+</body>
+</html>

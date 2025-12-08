@@ -1,0 +1,284 @@
+/*
+ * @name            jPulse Framework / Plugins / Auth-MFA / WebApp / View / jPulse Common CSS
+ * @tagline         Common CSS of the Auth-MFA Plugin
+ * @description     Common CSS for the Auth-MFA Plugin, appended to the framework common CSS
+ * @file            plugins/auth-mfa/webapp/view/jpulse-common.css
+ * @version         0.9.0
+ * @release         2025-12-07
+ * @repository      https://github.com/jpulse-net/plugin-auth-mfa
+ * @author          Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
+ * @copyright       2025 Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
+ * @license         BSL 1.1 -- see LICENSE file; for commercial use: team@jpulse.net
+ * @genai           80%, Cursor 2.1, Claude Sonnet 4.5
+ */
+
+/* ============================================================================
+   MFA Status Indicators
+   ============================================================================ */
+
+.mfa-status-enabled {
+    color: var(--jp-color-success, #28a745);
+}
+
+.mfa-status-disabled {
+    color: var(--jp-color-secondary, #6c757d);
+}
+
+.mfa-status-locked {
+    color: var(--jp-color-danger, #dc3545);
+}
+
+.mfa-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.mfa-status-badge.enabled {
+    background-color: var(--jp-color-success-bg, #d4edda);
+    color: var(--jp-color-success, #28a745);
+}
+
+.mfa-status-badge.disabled {
+    background-color: var(--jp-color-secondary-bg, #e9ecef);
+    color: var(--jp-color-secondary, #6c757d);
+}
+
+.mfa-status-badge.locked {
+    background-color: var(--jp-color-danger-bg, #f8d7da);
+    color: var(--jp-color-danger, #dc3545);
+}
+
+/* ============================================================================
+   MFA Code Input
+   ============================================================================ */
+
+.mfa-code-input {
+    text-align: center;
+    font-size: 1.75rem;
+    font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+    letter-spacing: 0.5rem;
+    padding: 0.75rem 1rem;
+    max-width: 200px;
+    margin: 0 auto;
+}
+
+.mfa-code-input:focus {
+    border-color: var(--jp-color-primary, #667eea);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.mfa-backup-code-input {
+    text-align: center;
+    font-size: 1.25rem;
+    font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+    letter-spacing: 0.25rem;
+    text-transform: uppercase;
+}
+
+/* ============================================================================
+   QR Code Container
+   ============================================================================ */
+
+.mfa-qr-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.5rem;
+    background: white;
+    border: 2px dashed var(--jp-border-color, #dee2e6);
+    border-radius: 8px;
+    margin: 1rem 0;
+}
+
+.mfa-qr-container img {
+    max-width: 200px;
+    height: auto;
+}
+
+.mfa-qr-container .mfa-qr-label {
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--jp-text-muted, #6c757d);
+}
+
+/* ============================================================================
+   Backup Codes Display
+   ============================================================================ */
+
+.mfa-backup-codes {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+.mfa-backup-codes code {
+    display: block;
+    padding: 0.5rem 0.75rem;
+    background: var(--jp-bg-light, #f8f9fa);
+    border: 1px solid var(--jp-border-color, #dee2e6);
+    border-radius: 4px;
+    text-align: center;
+    font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+    font-size: 0.95rem;
+}
+
+.mfa-backup-codes-warning {
+    background: var(--jp-color-warning-bg, #fff3cd);
+    border: 1px solid var(--jp-color-warning-border, #ffc107);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+}
+
+.mfa-backup-codes-warning .warning-icon {
+    font-size: 1.25rem;
+    margin-right: 0.5rem;
+}
+
+/* ============================================================================
+   MFA Setup Steps
+   ============================================================================ */
+
+.mfa-setup-steps {
+    counter-reset: mfa-step;
+}
+
+.mfa-setup-step {
+    position: relative;
+    padding-left: 3rem;
+    margin-bottom: 1.5rem;
+}
+
+.mfa-setup-step::before {
+    counter-increment: mfa-step;
+    content: counter(mfa-step);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 2rem;
+    height: 2rem;
+    background: var(--jp-color-primary, #667eea);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.mfa-setup-step.completed::before {
+    content: '✓';
+    background: var(--jp-color-success, #28a745);
+}
+
+/* ============================================================================
+   MFA Profile Card
+   ============================================================================ */
+
+.mfa-profile-card {
+    background: var(--jp-card-bg, white);
+    border: 1px solid var(--jp-border-color, #dee2e6);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.mfa-profile-card .card-header {
+    padding: 1rem 1.25rem;
+    background: var(--jp-bg-light, #f8f9fa);
+    border-bottom: 1px solid var(--jp-border-color, #dee2e6);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.mfa-profile-card .card-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.mfa-profile-card .card-body {
+    padding: 1.25rem;
+}
+
+/* ============================================================================
+   MFA Verify Page
+   ============================================================================ */
+
+.mfa-verify-container {
+    max-width: 400px;
+    margin: 2rem auto;
+}
+
+.mfa-verify-card {
+    background: var(--jp-card-bg, white);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.mfa-verify-card .card-header {
+    background: linear-gradient(135deg, var(--jp-color-primary, #667eea) 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.mfa-verify-card .card-header h2 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.25rem;
+}
+
+.mfa-verify-card .card-body {
+    padding: 2rem;
+}
+
+/* ============================================================================
+   MFA Lockout Display
+   ============================================================================ */
+
+.mfa-lockout-message {
+    text-align: center;
+    padding: 2rem;
+}
+
+.mfa-lockout-message .lockout-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.mfa-lockout-message .lockout-timer {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--jp-color-danger, #dc3545);
+    margin: 1rem 0;
+}
+
+/* ============================================================================
+   Responsive Adjustments
+   ============================================================================ */
+
+@media (max-width: 480px) {
+    .mfa-backup-codes {
+        grid-template-columns: 1fr;
+    }
+
+    .mfa-code-input {
+        font-size: 1.5rem;
+        letter-spacing: 0.3rem;
+    }
+
+    .mfa-verify-container {
+        margin: 1rem;
+    }
+}
+
+/* EOF plugins/auth-mfa/webapp/view/jpulse-common.css */
+

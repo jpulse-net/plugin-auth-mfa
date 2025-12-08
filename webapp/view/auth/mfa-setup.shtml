@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<!--
+ * @name            jPulse Framework / Plugins / Auth-MFA / WebApp / View / Auth / MFA Setup
+ * @tagline         MFA Setup Page
+ * @description     MFA Setup Page for enabling Two-Factor Authentication
+ * @file            plugins/auth-mfa/webapp/view/auth/mfa-setup.shtml
+ * @version         0.9.0
+ * @release         2025-12-07
+ * @repository      https://github.com/jpulse-net/plugin-auth-mfa
+ * @author          Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
+ * @copyright       2025 Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
+ * @license         BSL 1.1 -- see LICENSE file; for commercial use: team@jpulse.net
+ * @genai           80%, Cursor 2.1, Claude Sonnet 4.5
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two-Factor Authentication Setup - {{app.site.shortName}}</title>
+{{file.include "jpulse-header.tmpl"}}
+    <style>
+    .local-mfa-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+        border-radius: 8px 8px 0 0;
+        margin: -20px -20px 20px -20px;
+    }
+
+    .local-mfa-header h1 {
+        margin: 0 0 8px 0;
+        font-size: 1.5rem;
+    }
+
+    .local-mfa-header p {
+        margin: 0;
+        opacity: 0.9;
+    }
+
+    .local-mfa-step {
+        display: none;
+    }
+
+    .local-mfa-step.local-active {
+        display: block;
+    }
+
+    .local-app-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin: 15px 0;
+    }
+
+    .local-app-item {
+        padding: 12px;
+        background: #f8f9fa;
+        border-radius: 6px;
+        text-align: center;
+        font-weight: 500;
+        color: #555;
+    }
+
+    .local-qr-container {
+        text-align: center;
+        padding: 25px;
+        background: #ffffff;
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        margin: 15px 0;
+    }
+
+    .local-qr-container img {
+        max-width: 200px;
+    }
+
+    .local-secret-display {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .local-secret-code {
+        flex: 1;
+        padding: 10px;
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        font-family: monospace;
+        word-break: break-all;
+    }
+
+    .local-code-input {
+        text-align: center;
+        font-size: 1.75rem;
+        letter-spacing: 8px;
+        font-family: monospace;
+        max-width: 200px;
+        margin: 0 auto;
+    }
+
+    .local-backup-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        margin: 15px 0;
+    }
+
+    .local-backup-code {
+        padding: 10px;
+        background: white;
+        border-radius: 4px;
+        text-align: center;
+        font-family: monospace;
+        font-weight: 500;
+    }
+
+    .local-success-icon {
+        font-size: 4rem;
+        text-align: center;
+    }
+
+    @media (max-width: 480px) {
+        .local-app-grid,
+        .local-backup-grid {
+            grid-template-columns: 1fr;
+        }
+        .local-secret-display {
+            flex-direction: column;
+        }
+    }
+    </style>
+</head>
+<body>
+    <div class="jp-container-600">
+        <div class="jp-card">
+            <div class="local-mfa-header">
+                <h1>🔐 Enable Two-Factor Authentication</h1>
+                <p>Secure your account with an authenticator app</p>
+            </div>
+
+            <!-- Step 1: Initial state -->
+            <div id="mfa-step-start" class="local-mfa-step local-active">
+                <div class="jp-info-box">
+                    <h4>Why enable 2FA?</h4>
+                    <ul class="jp-list">
+                        <li>🛡️ Adds an extra layer of security</li>
+                        <li>📱 Works with any authenticator app</li>
+                        <li>🔒 Protects against password theft</li>
+                    </ul>
+                </div>
+
+                <p>You'll need an authenticator app like:</p>
+                <div class="local-app-grid">
+                    <div class="local-app-item">Google Authenticator</div>
+                    <div class="local-app-item">Microsoft Authenticator</div>
+                    <div class="local-app-item">Authy</div>
+                    <div class="local-app-item">1Password</div>
+                </div>
+
+                <div class="jp-btn-group">
+                    <button id="btn-start-setup" class="jp-btn jp-btn-primary">Start Setup</button>
+                    <a href="/user/profile.shtml" class="jp-btn jp-btn-secondary">Cancel</a>
+                </div>
+            </div>
+
+            <!-- Step 2: QR Code -->
+            <div id="mfa-step-qr" class="local-mfa-step">
+                <h3>Step 1: Scan QR Code</h3>
+                <p class="jp-text-muted">Open your authenticator app and scan this QR code:</p>
+
+                <div class="local-qr-container">
+                    <div id="qr-loading" class="jp-text-muted">Loading QR code...</div>
+                    <img id="qr-code" src="" alt="QR Code" style="display: none;" />
+                </div>
+
+                <details class="jp-info-box">
+                    <summary>Can't scan? Enter code manually</summary>
+                    <div class="local-secret-display">
+                        <code id="manual-secret" class="local-secret-code"></code>
+                        <button class="jp-btn jp-btn-secondary jp-btn-sm" onclick="copySecret()">📋 Copy</button>
+                    </div>
+                </details>
+
+                <h3>Step 2: Enter Verification Code</h3>
+                <p class="jp-text-muted">Enter the 6-digit code from your authenticator app:</p>
+
+                <form id="verify-form">
+                    <div class="jp-form-group jp-text-center">
+                        <input type="text" id="verification-code" class="jp-form-input local-code-input"
+                            placeholder="000000" maxlength="6" pattern="[0-9]{6}"
+                            autocomplete="one-time-code" required />
+                    </div>
+                    <div id="verify-error" class="jp-error-box" style="display: none;"></div>
+                    <div class="jp-btn-group">
+                        <button type="submit" class="jp-btn jp-btn-primary">Verify & Enable 2FA</button>
+                        <button type="button" class="jp-btn jp-btn-secondary" onclick="cancelSetup()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Step 3: Success / Backup Codes -->
+            <div id="mfa-step-success" class="local-mfa-step">
+                <div class="local-success-icon">✅</div>
+                <h2 class="jp-text-center">Two-Factor Authentication Enabled!</h2>
+                <p class="jp-text-center jp-text-muted">Your account is now protected with 2FA.</p>
+
+                <div class="jp-warning-box">
+                    <h4>⚠️ Save Your Backup Codes</h4>
+                    <p>If you lose access to your authenticator app, you can use these codes to log in.
+                    Each code can only be used once.</p>
+
+                    <div id="backup-codes" class="local-backup-grid">
+                        <!-- Filled by JavaScript -->
+                    </div>
+
+                    <div class="jp-btn-group">
+                        <button class="jp-btn jp-btn-secondary" onclick="downloadBackupCodes()">📥 Download</button>
+                        <button class="jp-btn jp-btn-secondary" onclick="copyBackupCodes()">📋 Copy</button>
+                    </div>
+                </div>
+
+                <div class="jp-btn-group">
+                    <a href="/user/profile.shtml" class="jp-btn jp-btn-primary">Go to Profile</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    let mfaSecret = '';
+    let backupCodesList = [];
+
+    jPulse.dom.ready(() => {
+        document.getElementById('btn-start-setup').addEventListener('click', startSetup);
+        document.getElementById('verify-form').addEventListener('submit', verifySetup);
+    });
+
+    async function startSetup() {
+        const startBtn = document.getElementById('btn-start-setup');
+        startBtn.disabled = true;
+        startBtn.textContent = 'Loading...';
+
+        try {
+            const result = await jPulse.api.post('/api/1/auth-mfa/setup');
+
+            if (!result.success) {
+                jPulse.UI.toast.error(result.error || 'Failed to start MFA setup');
+                startBtn.disabled = false;
+                startBtn.textContent = 'Start Setup';
+                return;
+            }
+
+            mfaSecret = result.data.secret;
+            const qrImg = document.getElementById('qr-code');
+            qrImg.src = result.data.qrCode;
+            qrImg.style.display = 'block';
+            document.getElementById('qr-loading').style.display = 'none';
+            document.getElementById('manual-secret').textContent = result.data.secret;
+
+            showStep('mfa-step-qr');
+            document.getElementById('verification-code').focus();
+
+        } catch (error) {
+            console.error('MFA setup error:', error);
+            jPulse.UI.toast.error('Failed to start MFA setup. Please try again.');
+            startBtn.disabled = false;
+            startBtn.textContent = 'Start Setup';
+        }
+    }
+
+    async function verifySetup(event) {
+        event.preventDefault();
+
+        const code = document.getElementById('verification-code').value;
+        const errorDiv = document.getElementById('verify-error');
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+
+        errorDiv.style.display = 'none';
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Verifying...';
+
+        try {
+            const result = await jPulse.api.post('/api/1/auth-mfa/verify-setup', { code });
+
+            if (!result.success) {
+                errorDiv.textContent = result.error || 'Invalid code. Please try again.';
+                errorDiv.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Verify & Enable 2FA';
+                document.getElementById('verification-code').select();
+                return;
+            }
+
+            backupCodesList = result.data.backupCodes || [];
+            const codesContainer = document.getElementById('backup-codes');
+            codesContainer.innerHTML = backupCodesList.map(code =>
+                `<code class="local-backup-code">${code}</code>`
+            ).join('');
+
+            showStep('mfa-step-success');
+            jPulse.UI.toast.success('Two-factor authentication enabled successfully!');
+
+        } catch (error) {
+            console.error('MFA verify error:', error);
+            errorDiv.textContent = 'Verification failed. Please try again.';
+            errorDiv.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Verify & Enable 2FA';
+        }
+    }
+
+    function showStep(stepId) {
+        document.querySelectorAll('.local-mfa-step').forEach(step => step.classList.remove('local-active'));
+        document.getElementById(stepId).classList.add('local-active');
+    }
+
+    function cancelSetup() {
+        window.location.href = '/user/profile.shtml';
+    }
+
+    async function copySecret() {
+        try {
+            await navigator.clipboard.writeText(mfaSecret);
+            jPulse.UI.toast.success('Secret copied to clipboard!');
+        } catch (error) {
+            jPulse.UI.toast.error('Failed to copy to clipboard');
+        }
+    }
+
+    async function copyBackupCodes() {
+        try {
+            await navigator.clipboard.writeText(backupCodesList.join('\n'));
+            jPulse.UI.toast.success('Backup codes copied to clipboard!');
+        } catch (error) {
+            jPulse.UI.toast.error('Failed to copy to clipboard');
+        }
+    }
+
+    function downloadBackupCodes() {
+        // Use centralized function with user email for account identification
+        jPulse.plugins.authMfa.utils.downloadBackupCodes(backupCodesList, '{{user.email}}');
+        jPulse.UI.toast.success('Backup codes downloaded!');
+    }
+    </script>
+
+{{file.include "jpulse-footer.tmpl"}}
+</body>
+</html>

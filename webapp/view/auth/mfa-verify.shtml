@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<!--
+ * @name            jPulse Framework / Plugins / Auth-MFA / WebApp / View / Auth / MFA Verify
+ * @tagline         MFA Verify Page
+ * @description     MFA Verify Page for verifying Two-Factor Authentication
+ * @file            plugins/auth-mfa/webapp/view/auth/mfa-verify.shtml
+ * @version         0.9.0
+ * @release         2025-12-07
+ * @repository      https://github.com/jpulse-net/plugin-auth-mfa
+ * @author          Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
+ * @copyright       2025 Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
+ * @license         BSL 1.1 -- see LICENSE file; for commercial use: team@jpulse.net
+ * @genai           80%, Cursor 2.1, Claude Sonnet 4.5
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two-Factor Authentication Verify - {{app.site.shortName}}</title>
+{{file.include "jpulse-header.tmpl"}}
+    <style>
+    .local-mfa-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+        border-radius: 8px 8px 0 0;
+        margin: -20px -20px 20px -20px;
+    }
+
+    .local-mfa-header h1 {
+        margin: 0 0 8px 0;
+        font-size: 1.5rem;
+    }
+
+    .local-mfa-header p {
+        margin: 0;
+        opacity: 0.9;
+    }
+
+    .local-code-input {
+        text-align: center;
+        font-size: 2rem;
+        letter-spacing: 10px;
+        font-family: monospace;
+    }
+
+    .local-backup-input {
+        text-align: center;
+        font-size: 1.5rem;
+        letter-spacing: 4px;
+        font-family: monospace;
+        text-transform: uppercase;
+    }
+
+    .local-hidden {
+        display: none;
+    }
+
+    .local-lockout-icon {
+        font-size: 4rem;
+        text-align: center;
+    }
+    </style>
+</head>
+<body>
+    <div class="jp-container-400">
+        <div class="jp-card">
+            <div class="local-mfa-header">
+                <h1>🔐 Two-Factor Authentication</h1>
+                <p>Enter the code from your authenticator app</p>
+            </div>
+
+            <!-- TOTP Verification -->
+            <div id="totp-section">
+                <form id="totp-form">
+                    <div class="jp-form-group jp-text-center">
+                        <input type="text" id="totp-code" class="jp-form-input local-code-input"
+                            placeholder="000000" maxlength="6" pattern="[0-9]{6}"
+                            autocomplete="one-time-code" autofocus required />
+                    </div>
+                    <div id="totp-error" class="jp-error-box" style="display: none;"></div>
+                    <button type="submit" id="btn-verify" class="jp-btn jp-btn-primary" style="width: 100%;">
+                        Verify
+                    </button>
+                </form>
+
+                <div class="jp-divider"><span>or</span></div>
+
+                <p class="jp-text-center">
+                    <a href="#" id="show-backup-link" class="jp-text-muted">
+                        Lost your device? Use a backup code
+                    </a>
+                </p>
+            </div>
+
+            <!-- Backup Code Verification -->
+            <div id="backup-section" class="local-hidden">
+                <form id="backup-form">
+                    <p class="jp-text-muted">Enter one of your backup codes:</p>
+                    <div class="jp-form-group jp-text-center">
+                        <input type="text" id="backup-code" class="jp-form-input local-backup-input"
+                            placeholder="XXXX-XXXX" maxlength="9" required />
+                    </div>
+                    <div id="backup-error" class="jp-error-box" style="display: none;"></div>
+                    <button type="submit" class="jp-btn jp-btn-primary" style="width: 100%;">
+                        Verify Backup Code
+                    </button>
+                </form>
+
+                <div class="jp-divider"><span>or</span></div>
+
+                <p class="jp-text-center">
+                    <a href="#" id="show-totp-link" class="jp-text-muted">
+                        Back to authenticator code
+                    </a>
+                </p>
+            </div>
+
+            <!-- Lockout Message -->
+            <div id="lockout-section" class="local-hidden jp-text-center">
+                <div class="local-lockout-icon">🔒</div>
+                <h3>Account Temporarily Locked</h3>
+                <p id="lockout-message" class="jp-text-muted">
+                    Too many failed attempts. Please try again later.
+                </p>
+                <a href="/auth/login.shtml" class="jp-btn jp-btn-secondary">Return to Login</a>
+            </div>
+
+            <details class="jp-info-box">
+                <summary>Need help?</summary>
+                <ul class="jp-list">
+                    <li>Open your authenticator app (Google Authenticator, Authy, etc.)</li>
+                    <li>Find the entry for this site</li>
+                    <li>Enter the 6-digit code shown</li>
+                    <li>Codes refresh every 30 seconds</li>
+                </ul>
+            </details>
+        </div>
+    </div>
+
+    <script>
+    // W-109: MFA verification using multi-step authentication flow
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirectUrl = urlParams.get('redirect') || '/';
+
+    jPulse.dom.ready(() => {
+        document.getElementById('totp-form').addEventListener('submit', verifyTotp);
+        document.getElementById('backup-form').addEventListener('submit', verifyBackup);
+        document.getElementById('show-backup-link').addEventListener('click', showBackupForm);
+        document.getElementById('show-totp-link').addEventListener('click', showTotpForm);
+
+        // Auto-submit when 6 digits entered
+        document.getElementById('totp-code').addEventListener('input', function(e) {
+            if (e.target.value.length === 6 && /^\d{6}$/.test(e.target.value)) {
+                document.getElementById('totp-form').requestSubmit();
+            }
+        });
+
+        // Format backup code with dash
+        document.getElementById('backup-code').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+            if (value.length > 4) {
+                value = value.slice(0, 4) + '-' + value.slice(4, 8);
+            }
+            e.target.value = value;
+        });
+    });
+
+    /**
+     * W-109: Verify TOTP code using multi-step login endpoint
+     */
+    async function verifyTotp(event) {
+        event.preventDefault();
+        const code = document.getElementById('totp-code').value;
+        const errorDiv = document.getElementById('totp-error');
+        const btn = document.getElementById('btn-verify');
+
+        btn.disabled = true;
+        btn.textContent = 'Verifying...';
+        errorDiv.style.display = 'none';
+
+        try {
+            // W-109: Use the multi-step login endpoint with step='mfa'
+            const result = await jPulse.api.post('/api/1/auth/login', {
+                step: 'mfa',
+                code: code
+            });
+
+            if (!result.success) {
+                // Handle error codes
+                if (result.code === 'AUTH_EXPIRED' || result.code === 'NO_PENDING_AUTH') {
+                    // Session expired - redirect to login
+                    jPulse.UI.toast.error('Session expired. Please login again.');
+                    setTimeout(() => {
+                        window.location.href = '/auth/login.shtml';
+                    }, 1500);
+                    return;
+                }
+
+                if (result.code === 'ACCOUNT_LOCKED' || result.error?.includes('locked')) {
+                    showLockout(result.error || 'Account temporarily locked');
+                    return;
+                }
+
+                // Show error message
+                errorDiv.textContent = result.error || 'Invalid code';
+                errorDiv.style.display = 'block';
+                document.getElementById('totp-code').value = '';
+                document.getElementById('totp-code').focus();
+                btn.disabled = false;
+                btn.textContent = 'Verify';
+                return;
+            }
+
+            // Check for additional steps (shouldn't happen after MFA, but handle it)
+            if (result.nextStep) {
+                jPulse.UI.toast.info(`Additional step required: ${result.nextStep}`);
+                // Handle other steps if needed
+                return;
+            }
+
+            // Login complete! Show success message
+            jPulse.UI.toast.success('Login successful!');
+
+            // Show non-blocking warnings if any
+            if (result.warnings && result.warnings.length > 0) {
+                result.warnings.forEach(w => {
+                    if (w.link) {
+                        jPulse.UI.toast.warning(`${w.message} <a href="${w.link}" style="color: inherit; text-decoration: underline;">${w.linkText || 'Learn more'}</a>`, { duration: 8000 });
+                    } else {
+                        jPulse.UI.toast.warning(w.message);
+                    }
+                });
+            }
+
+            setTimeout(() => {
+                window.location.href = redirectUrl;
+            }, 1000);
+
+        } catch (error) {
+            console.error('MFA verify error:', error);
+            errorDiv.textContent = 'Verification failed. Please try again.';
+            errorDiv.style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = 'Verify';
+        }
+    }
+
+    /**
+     * W-109: Verify backup code using multi-step login endpoint
+     */
+    async function verifyBackup(event) {
+        event.preventDefault();
+        const code = document.getElementById('backup-code').value;
+        const errorDiv = document.getElementById('backup-error');
+        const btn = event.target.querySelector('button[type="submit"]');
+
+        btn.disabled = true;
+        btn.textContent = 'Verifying...';
+        errorDiv.style.display = 'none';
+
+        try {
+            // W-109: Use the multi-step login endpoint with step='mfa-backup'
+            const result = await jPulse.api.post('/api/1/auth/login', {
+                step: 'mfa-backup',
+                code: code
+            });
+
+            if (!result.success) {
+                if (result.code === 'AUTH_EXPIRED' || result.code === 'NO_PENDING_AUTH') {
+                    jPulse.UI.toast.error('Session expired. Please login again.');
+                    setTimeout(() => {
+                        window.location.href = '/auth/login.shtml';
+                    }, 1500);
+                    return;
+                }
+
+                if (result.error?.includes('locked')) {
+                    showLockout(result.error);
+                    return;
+                }
+
+                errorDiv.textContent = result.error || 'Invalid or already used backup code';
+                errorDiv.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = 'Verify Backup Code';
+                return;
+            }
+
+            // Show success message
+            jPulse.UI.toast.success('Login successful!');
+
+            // Show non-blocking warnings if any
+            if (result.warnings && result.warnings.length > 0) {
+                result.warnings.forEach(w => {
+                    if (w.link) {
+                        jPulse.UI.toast.warning(`${w.message} <a href="${w.link}" style="color: inherit; text-decoration: underline;">${w.linkText || 'Learn more'}</a>`, { duration: 8000 });
+                    } else {
+                        jPulse.UI.toast.warning(w.message);
+                    }
+                });
+            }
+
+            setTimeout(() => {
+                window.location.href = redirectUrl;
+            }, 1000);
+
+        } catch (error) {
+            console.error('Backup verify error:', error);
+            errorDiv.textContent = 'Verification failed. Please try again.';
+            errorDiv.style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = 'Verify Backup Code';
+        }
+    }
+
+    function showBackupForm(event) {
+        event.preventDefault();
+        document.getElementById('totp-section').classList.add('local-hidden');
+        document.getElementById('backup-section').classList.remove('local-hidden');
+        document.getElementById('backup-code').focus();
+    }
+
+    function showTotpForm(event) {
+        event.preventDefault();
+        document.getElementById('backup-section').classList.add('local-hidden');
+        document.getElementById('totp-section').classList.remove('local-hidden');
+        document.getElementById('totp-code').focus();
+    }
+
+    function showLockout(message) {
+        document.getElementById('totp-section').classList.add('local-hidden');
+        document.getElementById('backup-section').classList.add('local-hidden');
+        document.getElementById('lockout-section').classList.remove('local-hidden');
+        document.getElementById('lockout-message').textContent = message;
+    }
+    </script>
+
+{{file.include "jpulse-footer.tmpl"}}
+</body>
+</html>
