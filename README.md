@@ -107,6 +107,12 @@ This plugin extends the user schema with:
 - `otplib` - TOTP generation and validation
 - `qrcode` - QR code generation for enrollment
 
+## Plugin Releases
+
+- ✅ **Version 1.0.1 - Bug Fixes**: Fixed `verifyPassword` arguments order causing "data and hash must be strings" error when disabling MFA. Fixed UI showing conflicting buttons after disable by using page reload with deferred toast. Fixed admin/root users being able to disable MFA when policy requires it (now checks policy before returning 'enabled' reason). Hide disable button when policy requires MFA.
+
+- ✅ **Version 1.0.0 - Initial Release**: TOTP-based two-factor authentication with backup codes for account recovery. Flexible policy options: optional, required for all users, or required for specific roles (admin/root). Integration with jPulse multi-step login flow. User profile MFA management component. Admin lockout/reset capabilities.
+
 ## License
 
 BSL-1.1 - See LICENSE file
