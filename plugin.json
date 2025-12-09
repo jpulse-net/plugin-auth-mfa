@@ -1,7 +1,7 @@
 {
     "name": "auth-mfa",
     "npmPackage": "@jpulse-net/plugin-auth-mfa",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "icon": "🔐",
     "summary": "Multi-factor authentication using TOTP authenticator apps",
     "description": "<p>Adds TOTP-based multi-factor authentication to jPulse Framework. Supports authenticator apps like Google Authenticator, Authy, and Microsoft Authenticator.</p><ul><li><strong>TOTP Authentication:</strong> Time-based one-time passwords</li><li><strong>Backup Codes:</strong> Recovery codes for account access</li><li><strong>Flexible Policy:</strong> Optional, required, or role-based enforcement</li></ul>",

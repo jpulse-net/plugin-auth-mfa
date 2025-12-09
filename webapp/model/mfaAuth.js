@@ -3,8 +3,8 @@
  * @tagline         MFA Data Model
  * @description     MFA User Profile Component shows MFA status and management options in user profile
  * @file            plugins/auth-mfa/webapp/model/mfaAuth.js
- * @version         1.0.0
- * @release         2025-12-08
+ * @version         1.0.1
+ * @release         2025-12-09
  * @repository      https://github.com/jpulse-net/plugin-auth-mfa
  * @author          Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
  * @copyright       2025 Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
@@ -437,19 +437,18 @@ class MfaAuthModel {
     static async isMfaRequired(user) {
         const config = await this.getConfig();
 
-        // If MFA is already enabled, it's always required
-        if (user.mfa?.enabled) {
-            return { required: true, reason: 'enabled' };
-        }
+        // Check policy first (determines if disabling is allowed)
+        let policyResult = { required: false, reason: 'optional' };
 
-        // Check policy
         switch (config.mfaPolicy) {
             case 'required':
                 // Check grace period
                 if (user.mfa?.gracePeriodUntil && new Date() < new Date(user.mfa.gracePeriodUntil)) {
-                    return { required: false, reason: 'grace-period' };
+                    policyResult = { required: false, reason: 'grace-period' };
+                } else {
+                    policyResult = { required: true, reason: 'policy-required' };
                 }
-                return { required: true, reason: 'policy-required' };
+                break;
 
             case 'required-for-roles':
                 const userRoles = user.roles || ['user'];
@@ -459,16 +458,30 @@ class MfaAuthModel {
                 if (hasRequiredRole) {
                     // Check grace period
                     if (user.mfa?.gracePeriodUntil && new Date() < new Date(user.mfa.gracePeriodUntil)) {
-                        return { required: false, reason: 'grace-period' };
+                        policyResult = { required: false, reason: 'grace-period' };
+                    } else {
+                        policyResult = { required: true, reason: 'role-required' };
                     }
-                    return { required: true, reason: 'role-required' };
                 }
-                return { required: false, reason: 'optional' };
+                break;
 
             case 'optional':
             default:
-                return { required: false, reason: 'optional' };
+                policyResult = { required: false, reason: 'optional' };
+                break;
         }
+
+        // If policy requires MFA, return policy reason (prevents disabling)
+        if (policyResult.required) {
+            return policyResult;
+        }
+
+        // If MFA is enabled voluntarily, it's "required" but can be disabled
+        if (user.mfa?.enabled) {
+            return { required: true, reason: 'enabled' };
+        }
+
+        return policyResult;
     }
 
     /**
