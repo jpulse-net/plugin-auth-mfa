@@ -3,8 +3,8 @@
  * @tagline         MFA Data Model
  * @description     MFA User Profile Component shows MFA status and management options in user profile
  * @file            plugins/auth-mfa/webapp/model/mfaAuth.js
- * @version         1.0.1
- * @release         2025-12-09
+ * @version         1.0.2
+ * @release         2025-12-13
  * @repository      https://github.com/jpulse-net/plugin-auth-mfa
  * @author          Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
  * @copyright       2025 Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
@@ -681,6 +681,65 @@ class MfaAuthModel {
             return '';
         }
         return this.decrypt(user.mfa.secret);
+    }
+
+    /**
+     * W-112: Get MFA metrics (standardized getMetrics() format)
+     * @returns {Promise<Object>} Component stats with standardized structure
+     */
+    static async getMetrics() {
+        try {
+            if (!global.UserModel) {
+                throw new Error('global.UserModel not available');
+            }
+
+            const collection = global.UserModel.getCollection();
+
+            // Aggregate MFA statistics
+            const result = await collection.aggregate([
+                {
+                    $facet: {
+                        total: [{ $count: 'count' }],
+                        withMfa: [
+                            { $match: { 'mfa.enabled': true } },
+                            { $count: 'count' }
+                        ],
+                        totpEnabled: [
+                            { $match: { 'mfa.secret': { $exists: true, $ne: '' } } },
+                            { $count: 'count' }
+                        ],
+                        recoveryCodes: [
+                            { $match: { 'mfa.backupCodes': { $exists: true, $ne: [] } } },
+                            { $project: { count: { $size: '$mfa.backupCodes' } } },
+                            { $group: { _id: null, total: { $sum: '$count' } } }
+                        ],
+                        locked: [
+                            {
+                                $match: {
+                                    'mfa.lockedUntil': {
+                                        $exists: true,
+                                        $gt: new Date()
+                                    }
+                                }
+                            },
+                            { $count: 'count' }
+                        ]
+                    }
+                }
+            ]).toArray();
+
+            const data = result[0];
+
+            return {
+                usersWithMfa: data.withMfa[0]?.count || 0,
+                totpEnabled: data.totpEnabled[0]?.count || 0,
+                recoveryCodesGenerated: data.recoveryCodes[0]?.total || 0,
+                locked: data.locked[0]?.count || 0,
+                total: data.total[0]?.count || 0
+            };
+        } catch (error) {
+            throw new Error(`Failed to get MFA stats: ${error.message}`);
+        }
     }
 }
 

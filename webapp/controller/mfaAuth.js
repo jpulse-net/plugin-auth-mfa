@@ -3,8 +3,8 @@
  * @tagline         MFA Authentication Controller
  * @description     Multi-factor authentication using TOTP
  * @file            plugins/auth-mfa/webapp/controller/mfaAuth.js
- * @version         1.0.1
- * @release         2025-12-09
+ * @version         1.0.2
+ * @release         2025-12-13
  * @repository      https://github.com/jpulse-net/plugin-auth-mfa
  * @author          Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
  * @copyright       2025 Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
@@ -31,7 +31,8 @@ class MfaAuthController {
         // Multi-step authentication hooks
         onAuthGetSteps: { priority: 100 },
         onAuthValidateStep: { priority: 100 },
-        onAuthGetWarnings: { priority: 100 }
+        onAuthGetWarnings: { priority: 100 },
+        onGetInstanceStats: { priority: 100 } // W-112: Metrics stats collection hook
     };
 
     // ========================================================================
@@ -44,8 +45,6 @@ class MfaAuthController {
         { method: 'POST', path: '/api/1/auth-mfa/verify-setup',  handler: 'apiVerifySetup',  auth: 'user' },
         { method: 'POST', path: '/api/1/auth-mfa/disable',       handler: 'apiDisable',      auth: 'user' },
         { method: 'POST', path: '/api/1/auth-mfa/backup-codes',  handler: 'apiBackupCodes',  auth: 'user' }
-        // Note: MFA verification during login is handled via authExecuteStepHook (W-109)
-        // No separate verify/verify-backup endpoints needed
     ];
 
     /**
@@ -263,6 +262,56 @@ class MfaAuthController {
                 `Error checking MFA policy: ${error.message}`);
         }
 
+        return context;
+    }
+
+    /**
+     * W-112: Collect instance statistics for metrics API
+     * @param {object} context - { stats: {}, instanceId: string }
+     * @returns {object} Modified context with auth-mfa stats added
+     */
+    static async onGetInstanceStats(context) {
+        try {
+            const mfaStats = await MfaAuthModel.getMetrics();
+            context.stats['auth-mfa'] = {
+                component: 'Auth-MFA',
+                status: 'ok',
+                initialized: true,
+                stats: mfaStats,
+                meta: {
+                    ttl: 60000,  // 1 minute - DB query
+                    category: 'plugin',
+                    fields: {
+                        'usersWithMfa': {
+                            global: true,        // Database-backed, same across instances
+                            aggregate: 'sum'
+                        },
+                        'totpEnabled': {
+                            global: true,
+                            aggregate: 'sum'
+                        },
+                        'recoveryCodesGenerated': {
+                            global: true,
+                            aggregate: 'sum',
+                            visualize: false     // Don't visualize this field
+                        },
+                        'locked': {
+                            global: true,
+                            aggregate: 'sum'
+                        },
+                        'total': {
+                            global: true,
+                            aggregate: 'sum'
+                        }
+                    }
+                },
+                timestamp: new Date().toISOString()
+            };
+        } catch (error) {
+            // Log error but don't break metrics
+            LogController.logError(null, 'auth-mfa.onGetInstanceStats',
+                `Failed to get stats: ${error.message}`);
+        }
         return context;
     }
 

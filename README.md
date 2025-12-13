@@ -1,4 +1,4 @@
-# jPulse Framework / Plugins / Auth-MFA / README v1.0.1
+# jPulse Framework / Plugins / Auth-MFA / README v1.0.2
 
 Multi-factor authentication plugin for jPulse Framework using TOTP (Time-based One-Time Password).
 
