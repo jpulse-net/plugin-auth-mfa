@@ -4,15 +4,15 @@
  * @tagline         MFA User Profile Component
  * @description     MFA User Profile Component shows MFA status and management options in user profile
  * @file            plugins/auth-mfa/webapp/view/jpulse-plugins/auth-mfa.shtml
- * @version         1.0.2
- * @release         2025-12-13
+ * @version         1.0.3
+ * @release         2026-01-09
  * @repository      https://github.com/jpulse-net/plugin-auth-mfa
  * @author          Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
  * @copyright       2025 Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
  * @license         BSL 1.1 -- see LICENSE file; for commercial use: team@jpulse.net
  * @genai           80%, Cursor 2.1, Claude Sonnet 4.5
 -->
-<html lang="en">
+<html {{appConfig.system.htmlAttrs}}>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

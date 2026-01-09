@@ -3,8 +3,8 @@
  * @tagline         MFA Data Model
  * @description     MFA User Profile Component shows MFA status and management options in user profile
  * @file            plugins/auth-mfa/webapp/model/mfaAuth.js
- * @version         1.0.2
- * @release         2025-12-13
+ * @version         1.0.3
+ * @release         2026-01-09
  * @repository      https://github.com/jpulse-net/plugin-auth-mfa
  * @author          Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
  * @copyright       2025 Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/

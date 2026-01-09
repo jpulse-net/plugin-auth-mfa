@@ -1,0 +1,16 @@
+# Local work files
+.jpulse/
+commit-*.txt
+tt-*
+*.save[0-9]
+*.save[0-9][0-9]
+*.bak
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
