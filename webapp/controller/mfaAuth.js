@@ -3,8 +3,8 @@
  * @tagline         MFA Authentication Controller
  * @description     Multi-factor authentication using TOTP
  * @file            plugins/auth-mfa/webapp/controller/mfaAuth.js
- * @version         1.0.3
- * @release         2026-01-09
+ * @version         1.0.4
+ * @release         2026-01-23
  * @repository      https://github.com/jpulse-net/plugin-auth-mfa
  * @author          Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
  * @copyright       2025 Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
@@ -12,7 +12,7 @@
  * @genai           80%, Cursor 2.1, Claude Sonnet 4.5
 */
 
-import { authenticator } from 'otplib';
+import { buildOtpAuthUri, generateTotpSecret, normalizeTotpToken, verifyTotpToken } from '../utils/totp.js';
 import qrcode from 'qrcode';
 import MfaAuthModel from '../model/mfaAuth.js';
 import LogController from '../../../../webapp/controller/log.js';
@@ -169,7 +169,7 @@ class MfaAuthController {
                         `Backup code verification failed for user ${user.username}`);
                 }
             } else {
-                // Validate TOTP code (default window of 1 step = 30 seconds tolerance)
+                // Validate TOTP code (tolerance of 1 step = 30 seconds)
                 const secret = MfaAuthModel.getDecryptedSecret(user);
                 if (!secret) {
                     context.valid = false;
@@ -179,10 +179,11 @@ class MfaAuthController {
                     return context;
                 }
 
-                const cleanCode = code.toString().replace(/\s/g, '');
-                isValid = authenticator.verify({
+                const cleanCode = normalizeTotpToken(code);
+                isValid = verifyTotpToken({
                     token: cleanCode,
-                    secret: secret
+                    secret: secret,
+                    window: 1
                 });
 
                 if (isValid) {
@@ -392,19 +393,22 @@ class MfaAuthController {
                 });
             }
 
-            // Generate secret
-            const secret = authenticator.generateSecret();
+            // Generate a new Base32 secret (20 bytes / 160 bits recommended)
+            const secret = generateTotpSecret(20);
 
             // Get issuer name from config
             const config = await MfaAuthModel.getConfig();
             const issuer = config.issuerName || 'jPulse';
 
-            // Generate OTP auth URL
-            const otpauth = authenticator.keyuri(
-                user.email || user.username,
-                issuer,
-                secret
-            );
+            // Generate OTP auth URL for QR code
+            const otpauth = buildOtpAuthUri({
+                issuer: issuer,
+                label: user.email || user.username,
+                secret: secret,
+                digits: 6,
+                period: 30,
+                algorithm: 'SHA1'
+            });
 
             // Generate QR code as data URL
             const qrCodeDataUrl = await qrcode.toDataURL(otpauth);
@@ -475,9 +479,10 @@ class MfaAuthController {
             }
 
             // Verify code
-            const isValid = authenticator.verify({
-                token: code.toString().replace(/\s/g, ''),
-                secret: secret
+            const isValid = verifyTotpToken({
+                token: normalizeTotpToken(code),
+                secret: secret,
+                window: 1
             });
 
             if (!isValid) {

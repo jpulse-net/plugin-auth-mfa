@@ -1,4 +1,4 @@
-# jPulse Framework / Plugins / Auth-MFA / README v1.0.3
+# jPulse Framework / Plugins / Auth-MFA / README v1.0.4
 
 Multi-factor authentication plugin for jPulse Framework using TOTP (Time-based One-Time Password).
 
@@ -104,14 +104,19 @@ This plugin extends the user schema with:
 
 ## Dependencies
 
-- `otplib` - TOTP generation and validation
-- `qrcode` - QR code generation for enrollment
+- `qrcode` - QR code generation for enrollment (the plugin uses a built-in TOTP implementation)
 
 ## Plugin Releases
 
-- ✅ **Version 1.0.1 - Bug Fixes**: Fixed `verifyPassword` arguments order causing "data and hash must be strings" error when disabling MFA. Fixed UI showing conflicting buttons after disable by using page reload with deferred toast. Fixed admin/root users being able to disable MFA when policy requires it (now checks policy before returning 'enabled' reason). Hide disable button when policy requires MFA.
+- **Version 1.0.4, W-138 - Remove `otplib` dependency**: Replaced `otplib` with a minimal, self-contained RFC6238 TOTP implementation using Node.js `crypto` (Base32 + TOTP + `otpauth://` URI builder). Keeps the same UI/QR-code enrollment flow while avoiding upstream Node/WebCrypto engine constraints. Compatibility: jPulse Framework v1.4.14+.
 
-- ✅ **Version 1.0.0 - Initial Release**: TOTP-based two-factor authentication with backup codes for account recovery. Flexible policy options: optional, required for all users, or required for specific roles (admin/root). Integration with jPulse multi-step login flow. User profile MFA management component. Admin lockout/reset capabilities.
+- **Version 1.0.3, W-129 - Theme Infrastructure Compatibility**: Align plugin with W-129 theme infrastructure by using `{{appConfig.system.htmlAttrs}}` (instead of hardcoded `lang="en"`) and improving metrics display name. Compatibility: jPulse Framework v1.4.9+.
+
+- **Version 1.0.2, W-112 - Metrics Integration**: Integrated auth-mfa plugin with W-112 standardized metrics system. Added `onGetInstanceStats` hook for metrics collection, reports MFA statistics, and supports cluster-wide aggregation.
+
+- **Version 1.0.1 - Bug Fixes**: Fixed `verifyPassword` arguments order causing "data and hash must be strings" error when disabling MFA. Fixed UI showing conflicting buttons after disable by using page reload with deferred toast. Fixed admin/root users being able to disable MFA when policy requires it (now checks policy before returning 'enabled' reason). Hide disable button when policy requires MFA.
+
+- **Version 1.0.0 - Initial Release**: TOTP-based two-factor authentication with backup codes for account recovery. Flexible policy options: optional, required for all users, or required for specific roles (admin/root). Integration with jPulse multi-step login flow. User profile MFA management component. Admin lockout/reset capabilities.
 
 ## License
 

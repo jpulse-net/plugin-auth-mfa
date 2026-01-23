@@ -4,8 +4,8 @@
  * @tagline         MFA Setup Page
  * @description     MFA Setup Page for enabling Two-Factor Authentication
  * @file            plugins/auth-mfa/webapp/view/auth/mfa-setup.shtml
- * @version         1.0.3
- * @release         2026-01-09
+ * @version         1.0.4
+ * @release         2026-01-23
  * @repository      https://github.com/jpulse-net/plugin-auth-mfa
  * @author          Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
  * @copyright       2025 Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
@@ -162,7 +162,7 @@
 
                 <div class="jp-btn-group">
                     <button id="btn-start-setup" class="jp-btn jp-btn-primary">Start Setup</button>
-                    <a href="/user/profile.shtml" class="jp-btn jp-btn-secondary">Cancel</a>
+                    <a href="/user/settings" class="jp-btn jp-btn-secondary">Cancel</a>
                 </div>
             </div>
 
@@ -223,7 +223,7 @@
                 </div>
 
                 <div class="jp-btn-group">
-                    <a href="/user/profile.shtml" class="jp-btn jp-btn-primary">Go to Profile</a>
+                    <a href="/user/settings" class="jp-btn jp-btn-primary">Go to Profile</a>
                 </div>
             </div>
         </div>
@@ -318,7 +318,7 @@
     }
 
     function cancelSetup() {
-        window.location.href = '/user/profile.shtml';
+        window.location.href = '/user/settings';
     }
 
     async function copySecret() {
