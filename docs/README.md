@@ -1,4 +1,4 @@
-# jPulse Docs / Installed Plugins / Auth-MFA Plugin v1.0.4
+# jPulse Docs / Installed Plugins / Auth-MFA Plugin v1.0.5
 
 Detailed documentation for the jPulse MFA (Multi-Factor Authentication) plugin.
 

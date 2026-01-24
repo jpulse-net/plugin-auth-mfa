@@ -1,4 +1,4 @@
-# jPulse Framework / Plugins / Auth-MFA / README v1.0.4
+# jPulse Framework / Plugins / Auth-MFA / README v1.0.5
 
 Multi-factor authentication plugin for jPulse Framework using TOTP (Time-based One-Time Password).
 
@@ -107,6 +107,8 @@ This plugin extends the user schema with:
 - `qrcode` - QR code generation for enrollment (the plugin uses a built-in TOTP implementation)
 
 ## Plugin Releases
+
+- **Version 1.0.5, W-139 - Theme-safe settings card styling**: Removed plugin-specific `backgroundColor` card styling so the MFA settings card inherits default theme styling and works in both light and dark mode.
 
 - **Version 1.0.4, W-138 - Remove `otplib` dependency**: Replaced `otplib` with a minimal, self-contained RFC6238 TOTP implementation using Node.js `crypto` (Base32 + TOTP + `otpauth://` URI builder). Keeps the same UI/QR-code enrollment flow while avoiding upstream Node/WebCrypto engine constraints. Compatibility: jPulse Framework v1.4.14+.
 

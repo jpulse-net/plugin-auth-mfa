@@ -3,8 +3,8 @@
  * @tagline         MFA Data Model
  * @description     MFA User Profile Component shows MFA status and management options in user profile
  * @file            plugins/auth-mfa/webapp/model/mfaAuth.js
- * @version         1.0.4
- * @release         2026-01-23
+ * @version         1.0.5
+ * @release         2026-01-24
  * @repository      https://github.com/jpulse-net/plugin-auth-mfa
  * @author          Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
  * @copyright       2025 Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
@@ -63,7 +63,6 @@ class MfaAuthModel {
                         label: 'MFA Settings',
                         icon: '🔐',
                         description: 'Two-factor authentication status and management',
-                        backgroundColor: '#fef9e7',
                         order: 100,
                         actions: [
                             {
@@ -103,7 +102,6 @@ class MfaAuthModel {
                         label: 'Two-Factor Authentication',
                         icon: '🔐',
                         description: 'Secure your account with an authenticator app',
-                        backgroundColor: '#e8f5e9',
                         order: 10,
                         actions: [
                             {
