@@ -1,4 +1,4 @@
-# jPulse Framework / Plugins / Auth-MFA / README v1.0.5
+# jPulse Framework / Plugins / Auth-MFA / README v1.0.6
 
 Multi-factor authentication plugin for jPulse Framework using TOTP (Time-based One-Time Password).
 
@@ -85,10 +85,10 @@ This plugin extends the user schema with:
 
 | Hook | Purpose |
 |------|---------|
-| `authAfterPasswordValidationHook` | Check if MFA is required |
-| `authValidateMfaHook` | Validate TOTP code |
-| `authOnMfaSuccessHook` | Record successful verification |
-| `authOnMfaFailureHook` | Handle failed attempts |
+| `onAuthGetSteps` | Add the MFA step (with `page: '/auth/mfa-verify.shtml'`) when the user has MFA enabled |
+| `onAuthValidateStep` | Validate TOTP or backup code |
+| `onAuthGetWarnings` | Nag when policy requires MFA but the user is not enrolled |
+| `onSystemGetStats` | MFA metrics for Admin → System Status |
 
 ## Security
 
@@ -99,7 +99,7 @@ This plugin extends the user schema with:
 
 ## Requirements
 
-- jPulse Framework >= 1.3.8
+- jPulse Framework >= 1.7.13
 - Node.js >= 18.0.0
 
 ## Dependencies
@@ -107,6 +107,8 @@ This plugin extends the user schema with:
 - `qrcode` - QR code generation for enrollment (the plugin uses a built-in TOTP implementation)
 
 ## Plugin Releases
+
+- **Version 1.0.6, W-211 - Hook rename for jPulse Framework v1.7.13+**: `onGetInstanceStats` → `onSystemGetStats` in `static hooks` and the handler method so MFA stats still appear on System Status. Also: `onAuthGetSteps` sets `page: '/auth/mfa-verify.shtml'` so OAuth and password-reset confirm show the MFA UI (password login via `login.shtml` already hardcodes that path). Compatibility: jPulse Framework v1.7.13+.
 
 - **Version 1.0.5, W-139 - Theme-safe settings card styling**: Removed plugin-specific `backgroundColor` card styling so the MFA settings card inherits default theme styling and works in both light and dark mode.
 

@@ -3,8 +3,8 @@
  * @tagline         MFA Authentication Controller
  * @description     Multi-factor authentication using TOTP
  * @file            plugins/auth-mfa/webapp/controller/mfaAuth.js
- * @version         1.0.5
- * @release         2026-01-24
+ * @version         1.0.6
+ * @release         2026-08-13
  * @repository      https://github.com/jpulse-net/plugin-auth-mfa
  * @author          Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
  * @copyright       2025 Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
@@ -32,7 +32,7 @@ class MfaAuthController {
         onAuthGetSteps: { priority: 100 },
         onAuthValidateStep: { priority: 100 },
         onAuthGetWarnings: { priority: 100 },
-        onGetInstanceStats: { priority: 100 } // W-112: Metrics stats collection hook
+        onSystemGetStats: { priority: 100 } // W-112: Metrics stats collection hook
     };
 
     // ========================================================================
@@ -86,6 +86,11 @@ class MfaAuthController {
                 requiredSteps.push({
                     step: 'mfa',
                     priority: 100,
+                    // Required for browser-redirect login (OAuth completeExternalAuth, password
+                    // reset beginAuthenticatedSession). Password login via login.shtml already
+                    // hardcodes this path in handleNextStep(); without page here, OAuth falls
+                    // back to /auth/login.shtml and the MFA UI never appears.
+                    page: '/auth/mfa-verify.shtml',
                     data: {
                         mfaMethod: user.mfa.method || 'totp',
                         isLocked: lockStatus?.locked || false,
@@ -271,7 +276,7 @@ class MfaAuthController {
      * @param {object} context - { stats: {}, instanceId: string }
      * @returns {object} Modified context with auth-mfa stats added
      */
-    static async onGetInstanceStats(context) {
+    static async onSystemGetStats(context) {
         try {
             const mfaStats = await MfaAuthModel.getMetrics();
             context.stats['auth-mfa'] = {
@@ -310,7 +315,7 @@ class MfaAuthController {
             };
         } catch (error) {
             // Log error but don't break metrics
-            LogController.logError(null, 'auth-mfa.onGetInstanceStats',
+            LogController.logError(null, 'auth-mfa.onSystemGetStats',
                 `Failed to get stats: ${error.message}`);
         }
         return context;
