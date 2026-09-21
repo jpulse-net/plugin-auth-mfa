@@ -3,13 +3,13 @@
  * @tagline         MFA Authentication Controller
  * @description     Multi-factor authentication using TOTP
  * @file            plugins/auth-mfa/webapp/controller/mfaAuth.js
- * @version         1.0.6
- * @release         2026-08-13
+ * @version         1.0.7
+ * @release         2026-09-20
  * @repository      https://github.com/jpulse-net/plugin-auth-mfa
  * @author          Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
  * @copyright       2025 Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
  * @license         BSL 1.1 -- see LICENSE file; for commercial use: team@jpulse.net
- * @genai           80%, Cursor 2.1, Claude Sonnet 4.5
+ * @genai           80%, Cursor 3.20, Grok 4.6
 */
 
 import { buildOtpAuthUri, generateTotpSecret, normalizeTotpToken, verifyTotpToken } from '../utils/totp.js';
@@ -79,7 +79,7 @@ class MfaAuthController {
                 const lockStatus = MfaAuthModel.isLocked(user);
                 if (lockStatus.locked) {
                     // Still add MFA step - will fail with lock message
-                    LogController.logInfo(req, 'mfaAuth.onAuthGetSteps',
+                    LogController.logDebug(req, 'mfaAuth.onAuthGetSteps',
                         `User ${user.username} MFA locked for ${lockStatus.remainingMinutes} minutes`);
                 }
 
@@ -98,7 +98,7 @@ class MfaAuthController {
                     }
                 });
 
-                LogController.logInfo(req, 'mfaAuth.onAuthGetSteps',
+                LogController.logDebug(req, 'mfaAuth.onAuthGetSteps',
                     `MFA step required for user ${user.username}`);
             }
             // Note: Users WITHOUT MFA enabled get a nag warning via onAuthGetWarnings
@@ -247,7 +247,7 @@ class MfaAuthController {
                         linkText: 'Set up 2FA'
                     });
 
-                    LogController.logInfo(req, 'mfaAuth.onAuthGetWarnings',
+                    LogController.logDebug(req, 'mfaAuth.onAuthGetWarnings',
                         `MFA warning added for user ${user.username}: ${mfaRequired.reason}`);
                 } else if (mfaRequired.reason === 'optional') {
                     // MFA is optional - soft nag to encourage setup (red toast)
@@ -259,7 +259,7 @@ class MfaAuthController {
                         linkText: 'Enable 2FA'
                     });
 
-                    LogController.logInfo(req, 'mfaAuth.onAuthGetWarnings',
+                    LogController.logDebug(req, 'mfaAuth.onAuthGetWarnings',
                         `MFA recommendation added for user ${user.username}`);
                 }
             }
@@ -315,7 +315,7 @@ class MfaAuthController {
             };
         } catch (error) {
             // Log error but don't break metrics
-            LogController.logError(null, 'auth-mfa.onSystemGetStats',
+            LogController.logError(null, 'mfaAuth.onSystemGetStats',
                 `Failed to get stats: ${error.message}`);
         }
         return context;

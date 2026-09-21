@@ -1,4 +1,4 @@
-# jPulse Docs / Installed Plugins / Auth-MFA Plugin v1.0.6
+# jPulse Docs / Installed Plugins / Auth-MFA Plugin v1.0.7
 
 Detailed documentation for the jPulse MFA (Multi-Factor Authentication) plugin.
 
@@ -10,10 +10,13 @@ Detailed documentation for the jPulse MFA (Multi-Factor Authentication) plugin.
 4. [Administrator Guide](#administrator-guide)
 5. [Troubleshooting](#troubleshooting)
 6. [FAQ](#faq)
+7. [Plugin Releases](#plugin-releases)
 
 ## Overview
 
 The Auth-MFA plugin adds an extra layer of security to your jPulse application by requiring users to verify their identity using a time-based one-time password (TOTP) from an authenticator app.
+
+Log scopes are `mfaAuth.*`. Hook internals that run on every login are debug (enable the `mfaAuth` area on Admin → Logs); API calls and MFA verification outcomes stay on the audit trail. Requires jPulse Framework >= 2.0.8.
 
 ### Supported Authenticator Apps
 
@@ -187,6 +190,10 @@ The server administrator should ensure NTP time synchronization is enabled. Code
 **Q: Can admins see my MFA secret?**
 
 No. MFA secrets are encrypted before storage. Administrators can reset your MFA (requiring you to set it up again) but cannot access your secret.
+
+## Plugin Releases
+
+- **1.0.7**, 2026-09-20: All log scopes are `mfaAuth.*`. Hook internals (`onAuthGetSteps`, `onAuthGetWarnings`) are debug; API calls and `onAuthValidateStep` outcomes stay on the audit trail. Requires jPulse Framework >= 2.0.8.
 
 ---
 
