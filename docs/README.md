@@ -1,4 +1,4 @@
-# jPulse Docs / Installed Plugins / Auth-MFA Plugin v1.0.8
+# jPulse Docs / Installed Plugins / Auth-MFA Plugin v1.0.9
 
 Detailed documentation for the jPulse MFA (Multi-Factor Authentication) plugin.
 
@@ -192,6 +192,8 @@ The server administrator should ensure NTP time synchronization is enabled. Code
 No. MFA secrets are encrypted before storage. Administrators can reset your MFA (requiring you to set it up again) but cannot access your secret.
 
 ## Plugin Releases
+
+- **1.0.9**, 2026-09-30: The shield from the plugin icon also shows on MFA Settings and Two-Factor Auth in the user menu, on the profile tabs, in the page titles, and on the plugins-index card. Reset and Unlock on the admin card are stroke icons sized to the button label. Status marks and the New Backup Codes button are unchanged.
 
 - **1.0.8**, 2026-09-30: The plugin icon on Admin → Plugins and the config page is an inline SVG (a shield with a plus) instead of the 🔐 emoji. No config or schema changes.
 

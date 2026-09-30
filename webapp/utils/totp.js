@@ -3,7 +3,7 @@
  * @tagline         TOTP Implementation
  * @description     Minimal TOTP implementation (RFC6238) with Base32 secrets (RFC4648)
  * @file            plugins/auth-mfa/webapp/utils/totp.js
- * @version         1.0.8
+ * @version         1.0.9
  * @release         2026-09-30
  * @repository      https://github.com/jpulse-net/plugin-auth-mfa
  * @author          Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/

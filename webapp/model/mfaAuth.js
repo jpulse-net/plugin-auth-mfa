@@ -3,7 +3,7 @@
  * @tagline         MFA Data Model
  * @description     MFA User Profile Component shows MFA status and management options in user profile
  * @file            plugins/auth-mfa/webapp/model/mfaAuth.js
- * @version         1.0.8
+ * @version         1.0.9
  * @release         2026-09-30
  * @repository      https://github.com/jpulse-net/plugin-auth-mfa
  * @author          Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
@@ -13,6 +13,13 @@
 */
 
 import crypto from 'crypto';
+
+// Same shield as plugin.json. Profile tabs insert a string that starts with <svg as HTML.
+const AUTH_MFA_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /><path d="M12 9v6" /><path d="M9 12h6" /></svg>';
+
+// Button glyphs, sized to the label. Reset and Unlock sit inside jp-btn-sm.
+const AUTH_MFA_RESET_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-0.125em"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>';
+const AUTH_MFA_UNLOCK_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-0.125em"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>';
 
 // PluginModel will be resolved at runtime when plugin is loaded
 let PluginModel = null;
@@ -61,7 +68,7 @@ class MfaAuthModel {
                     adminCard: {
                         visible: true,
                         label: 'MFA Settings',
-                        icon: '🔐',
+                        icon: AUTH_MFA_ICON,
                         description: 'Two-factor authentication status and management',
                         order: 100,
                         actions: [
@@ -69,7 +76,7 @@ class MfaAuthModel {
                                 id: 'reset',
                                 label: 'Reset MFA',
                                 style: 'warning',
-                                icon: '🔄',
+                                icon: AUTH_MFA_RESET_ICON,
                                 confirm: 'Reset MFA for this user? They will need to set it up again.',
                                 toast: "The user's MFA has been reset. Don't forget to save the changes.",
                                 showIf: { field: 'mfa.enabled', equals: true },
@@ -86,7 +93,7 @@ class MfaAuthModel {
                                 id: 'unlock',
                                 label: 'Unlock',
                                 style: 'success',
-                                icon: '🔓',
+                                icon: AUTH_MFA_UNLOCK_ICON,
                                 confirm: 'Unlock this user?',
                                 toast: "The user has been unlocked. Don't forget to save the changes.",
                                 showIf: { field: 'mfa.lockedUntil', condition: 'exists' },
@@ -100,7 +107,7 @@ class MfaAuthModel {
                     userCard: {
                         visible: true,
                         label: 'Two-Factor Authentication',
-                        icon: '🔐',
+                        icon: AUTH_MFA_ICON,
                         description: 'Secure your account with an authenticator app',
                         order: 10,
                         actions: [

@@ -1,6 +1,6 @@
 {
     "name": "@jpulse-net/plugin-auth-mfa",
-    "version": "1.0.8",
+    "version": "1.0.9",
     "type": "module",
     "description": "Multi-factor authentication plugin for jPulse Framework using TOTP",
     "keywords": [

@@ -1,4 +1,4 @@
-# jPulse Framework / Plugins / Auth-MFA / README v1.0.8
+# jPulse Framework / Plugins / Auth-MFA / README v1.0.9
 
 Multi-factor authentication plugin for jPulse Framework using TOTP (Time-based One-Time Password).
 
@@ -107,6 +107,8 @@ This plugin extends the user schema with:
 - `qrcode` - QR code generation for enrollment (the plugin uses a built-in TOTP implementation)
 
 ## Plugin Releases
+
+- **1.0.9, W-257, 2026-09-30 - Icons**: The shield from the plugin icon also shows on MFA Settings and Two-Factor Auth in the user menu, on the profile tabs, in the page titles, and on the plugins-index card. Reset and Unlock on the admin card are stroke icons sized to the button label. Status marks and the New Backup Codes button are unchanged.
 
 - **1.0.8, W-255, 2026-09-30 - Plugin icon**: The plugin icon on Admin → Plugins and the config page is an inline SVG (a shield with a plus) instead of the 🔐 emoji. No config or schema changes.
 

@@ -3,7 +3,7 @@
  * @tagline         Common JavaScript of the Auth-MFA Plugin
  * @description     Common JavaScript for the Auth-MFA Plugin, appended to the framework common JavaScript
  * @file            plugins/auth-mfa/webapp/view/jpulse-common.js
- * @version         1.0.8
+ * @version         1.0.9
  * @release         2026-09-30
  * @repository      https://github.com/jpulse-net/plugin-auth-mfa
  * @author          Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/

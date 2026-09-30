@@ -4,7 +4,7 @@
  * @tagline         MFA Verify Page
  * @description     MFA Verify Page for verifying Two-Factor Authentication
  * @file            plugins/auth-mfa/webapp/view/auth/mfa-verify.shtml
- * @version         1.0.8
+ * @version         1.0.9
  * @release         2026-09-30
  * @repository      https://github.com/jpulse-net/plugin-auth-mfa
  * @author          Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
@@ -67,7 +67,7 @@
     <div class="jp-container-400">
         <div class="jp-card">
             <div class="local-mfa-header">
-                <h1>🔐 Two-Factor Authentication</h1>
+                <h1><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /><path d="M12 9v6" /><path d="M9 12h6" /></svg> Two-Factor Authentication</h1>
                 <p>Enter the code from your authenticator app</p>
             </div>
 
