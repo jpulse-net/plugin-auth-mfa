@@ -1,14 +1,21 @@
 {
     "name": "@jpulse-net/plugin-auth-mfa",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "type": "module",
     "description": "Multi-factor authentication plugin for jPulse Framework using TOTP",
-    "keywords": ["jpulse", "jpulse-plugin", "mfa", "totp", "authentication", "2fa"],
+    "keywords": [
+        "jpulse",
+        "jpulse-plugin",
+        "mfa",
+        "totp",
+        "authentication",
+        "2fa"
+    ],
     "author": "jPulse Team <team@jpulse.net>",
     "license": "BSL-1.1",
     "repository": {
         "type": "git",
-        "url": "https://github.com/jpulse-net/plugin-auth-mfa.git"
+        "url": "git+https://github.com/jpulse-net/plugin-auth-mfa.git"
     },
     "publishConfig": {
         "registry": "https://npm.pkg.github.com",
@@ -25,4 +32,3 @@
         "qrcode": "^1.5.3"
     }
 }
-

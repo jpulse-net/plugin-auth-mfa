@@ -3,8 +3,8 @@
  * @tagline         Navigation of the Auth-MFA Plugin
  * @description     Navigation for the Auth-MFA Plugin, appended to the framework navigation
  * @file            plugins/auth-mfa/webapp/view/jpulse-navigation.js
- * @version         1.0.7
- * @release         2026-09-20
+ * @version         1.0.8
+ * @release         2026-09-30
  * @repository      https://github.com/jpulse-net/plugin-auth-mfa
  * @author          Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
  * @copyright       2025 Peter Thoeny, https://twiki.org & https://github.com/peterthoeny/
